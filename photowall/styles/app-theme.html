@@ -1,0 +1,146 @@
+<link rel="import" href="../bower_components/polymer/polymer.html"><link rel="import" href="../bower_components/paper-styles/color.html"><link rel="import" href="../bower_components/paper-styles/typography.html"><style is="custom-style">
+
+  :root {
+    --primary-text-color: var(--paper-grey-900);
+    --primary-background-color: #fff;
+    --secondary-text-color: #737373;
+    --disabled-text-color: #9b9b9b;
+    --divider-color: #dbdbdb;
+    --primary-color: var(--paper-blue-700);
+    --light-primary-color: var(--paper-blue-100);
+    --dark-primary-color: var(--paper-blue-900);
+    --accent-color: var(--paper-pink-a200);
+    --light-accent-color: var(--paper-pink-a100);
+    --dark-accent-color: var(--paper-pink-a400);
+  }
+
+  h1 {
+    @apply(--paper-font-headline);
+  }
+
+  paper-dialog {
+    z-index: 4;
+  }
+
+  paper-dialog.fill-screen {
+    height: 95%;
+    overflow: auto;
+    width: 95%;
+  }
+
+  paper-dialog.fill-screen > * {
+    margin: 0;
+    padding: 0;
+  }
+
+  paper-fab {
+    bottom: 30px;
+    position: fixed;
+    right: 30px;
+    z-index: 3;
+  }
+
+  [dir="rtl"] paper-fab {
+    left: 30px;
+    right: auto;
+  }
+
+  paper-material.notice {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  paper-material.notice .highlight {
+    color: var(--google-red-700);
+    font-weight: 500;
+  }
+
+  paper-toast paper-button {
+    color: var(--light-accent-color);
+    font-weight: 500;
+  }
+
+  paper-toolbar {
+    --paper-toolbar-title: {
+      margin: 0 10px;
+    };
+  }
+
+  .photos {
+    @apply(--layout-horizontal);
+    @apply(--layout-wrap);
+    padding: 3px;
+  }
+
+  .photo {
+    cursor: pointer;
+    height: 300px;
+    margin: 3px;
+    padding: 0;
+    position: relative;
+    width: calc(100% - 6px);
+  }
+
+  @media (min-width: 600px) {
+    .photo {
+      width: calc(50% - 6px);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .photo {
+      width: calc(33% - 6px);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .photo {
+      width: calc(25% - 6px);
+    }
+  }
+
+  @media (min-width: 1500px) {
+    .photo {
+      width: calc(20% - 6px);
+    }
+  }
+
+  .photo > .iconWrapper {
+    background: rgba(0, 0, 0, .7);
+    bottom: 0;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: all .4s ease;
+    z-index: 1;
+  }
+
+  .photo:focus > .iconWrapper {
+    opacity: 1;
+  }
+
+  .photo > .iconWrapper > iron-icon {
+    --iron-icon-height: 60px;
+    --iron-icon-width: 60px;
+    color: #fff;
+    left: 50%;
+    margin-left: -30px;
+    margin-top: -30px;
+    opacity: .7;
+    position: absolute;
+    top: 50%;
+  }
+
+  .photo > paper-ripple {
+    z-index: 2;
+  }
+
+  .photo > iron-image {
+    background: #ddd;
+    height: 100%;
+    width: 100%;
+  }
+
+</style>
