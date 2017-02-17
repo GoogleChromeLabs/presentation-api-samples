@@ -48,7 +48,9 @@
    */
   var addConnection = function(connection) {
     // Send the state of the slideshow through the connection.
-    sendMessage(connection, slideshow);
+    connection.onconnect = function() {
+      sendMessage(connection, slideshow);
+    };
     connection.onmessage = function(e) {
       var jsonMessage = JSON.parse(e.data);
       switch (jsonMessage.action) {
