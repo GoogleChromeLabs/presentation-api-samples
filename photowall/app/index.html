@@ -11,6 +11,7 @@
   limitations under the License.
 -->
 <!doctype html>
+<!-- TODO(issue #4): Fully upgrade to polymer 2.0 elements -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -22,121 +23,126 @@
   <!-- build:js scripts/webcomponents-lite.min.js -->
   <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <!-- endbuild -->
-  <link rel="import" href="elements/elements.html">
+  <link rel="import" href="elements/elements.html" >
+  <link rel="import" href="/bower_components/polymer/polymer.html">
 </head>
 <body unresolved>
-  <template is="dom-bind" id="app">
-    <paper-toolbar>
-      <div class="title">Photowall</div>
-      <template is="dom-if"
-          if="[[availableAndNotConnected(displaysAvailable, displayConnected)]]">
-        <paper-icon-button icon="hardware:cast" aria-label="Start presentation"
-            onclick="app.$.presentation.join()"></paper-icon-button>
-      </template>
+  <!-- Hybrid code: Wrapping the template extension dom-bind to allow for back-
+    wards compatibility -->
+  <dom-bind>
+    <template is="dom-bind" id="app">
+      <paper-toolbar>
+        <div class="title">Photowall</div>
+        <template is="dom-if"
+            if="[[availableAndNotConnected(displaysAvailable, displayConnected)]]">
+          <paper-icon-button icon="hardware:cast" aria-label="Start presentation"
+              onclick="app.$.presentation.join()"></paper-icon-button>
+        </template>
+        <template is="dom-if" if="[[displayConnected]]">
+          <paper-icon-button icon="settings" aria-label="Options"
+              onclick="app.$.optionsDialog.open()"></paper-icon-button>
+          <paper-icon-button icon="hardware:cast-connected"
+              aria-label="Terminate presentation"
+              onclick="app.$.presentation.terminate()"></paper-icon-button>
+        </template>
+      </paper-toolbar>
+      <presentation-api
+          id="presentation" url="receiver.html"
+          displays-available="{{displaysAvailable}}"
+          is-connected="{{displayConnected}}">
+      </presentation-api>
       <template is="dom-if" if="[[displayConnected]]">
-        <paper-icon-button icon="settings" aria-label="Options"
-            onclick="app.$.optionsDialog.open()"></paper-icon-button>
-        <paper-icon-button icon="hardware:cast-connected"
-            aria-label="Terminate presentation"
-            onclick="app.$.presentation.terminate()"></paper-icon-button>
+        <template is="dom-if" if="[[!slideshow.images.length]]">
+          <paper-material class="notice">
+            <iron-icon icon="info"></iron-icon>
+            You have no images in your slideshow queue. To add an image, click on
+            the icon below.
+          </paper-material>
+        </template>
+        <div class="photos">
+          <template is="dom-repeat" items="[[slideshow.images]]">
+              <div class="photo" on-click="selectPhoto">
+                <paper-ripple></paper-ripple>
+                <div class="iconWrapper">
+                  <iron-icon icon="delete"></iron-icon>
+                </div>
+                <iron-image src="[[item.thumbnail]]" sizing="cover"
+                    preload fade></iron-image>
+              </div>
+          </template>
+        </div>
+        <paper-fab icon="av:queue" title="Add an image to the slideshow"
+            on-click="openImagePicker"></paper-fab>
       </template>
-    </paper-toolbar>
-    <presentation-api
-        id="presentation" url="receiver.html"
-        displays-available="{{displaysAvailable}}"
-        is-connected="{{displayConnected}}">
-    </presentation-api>
-    <template is="dom-if" if="[[displayConnected]]">
-      <template is="dom-if" if="[[!slideshow.images.length]]">
+      <template is="dom-if" if="[[!displayConnected]]">
         <paper-material class="notice">
-          <iron-icon icon="info"></iron-icon>
-          You have no images in your slideshow queue. To add an image, click on
-          the icon below.
+          <h1>Let's get you started...</h1>
+          <p>
+            Before you can add images to the slideshow, you will need to
+            connect to a presentation display. Devices like
+            <a href="https://www.google.com/cast/" target="_blank">Chromecasts</a>
+            are examples of presentation displays.
+          </p>
+          <template is="dom-if" if="[[displaysAvailable]]">
+            <p>
+              To get started, simply click on the cast icon on the top of the page.
+            </p>
+          </template>
+          <template is="dom-if" if="[[!displaysAvailable]]">
+            <p class="highlight">
+              Could not find any presentation displays.
+            </p>
+          </template>
         </paper-material>
       </template>
-      <div class="photos">
-        <template is="dom-repeat" items="[[slideshow.images]]">
-            <div class="photo" on-click="selectPhoto">
-              <paper-ripple></paper-ripple>
-              <div class="iconWrapper">
-                <iron-icon icon="delete"></iron-icon>
-              </div>
-              <iron-image src="[[item.thumbnail]]" sizing="cover"
-                  preload fade></iron-image>
-            </div>
-        </template>
-      </div>
-      <paper-fab icon="av:queue" title="Add an image to the slideshow"
-          on-click="openImagePicker"></paper-fab>
-    </template>
-    <template is="dom-if" if="[[!displayConnected]]">
-      <paper-material class="notice">
-        <h1>Let's get you started...</h1>
+      <paper-dialog id="optionsDialog" with-backdrop="true">
+        <h2>Options</h2>
         <p>
-          Before you can add images to the slideshow, you will need to
-          connect to a presentation display. Devices like
-          <a href="https://www.google.com/cast/" target="_blank">Chromecasts</a>
-          are examples of presentation displays.
+          <paper-dropdown-menu label="Slideshow Speed">
+            <paper-listbox id="slideshowDelayListbox" class="dropdown-content"
+                selected="{{slideshow.delay}}" attr-for-selected="delay">
+              <paper-item delay="10000">Slow (0.5x)</paper-item>
+              <paper-item delay="5000">Normal</paper-item>
+              <paper-item delay="2500">Fast (2x)</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
         </p>
-        <template is="dom-if" if="[[displaysAvailable]]">
-          <p>
-            To get started, simply click on the cast icon on the top of the page.
-          </p>
-        </template>
-        <template is="dom-if" if="[[!displaysAvailable]]">
-          <p class="highlight">
-            Could not find any presentation displays.
-          </p>
-        </template>
-      </paper-material>
+
+        <p>
+          <paper-dropdown-menu label="Slideshow Animation">
+            <paper-listbox id="slideshowAnimationListbox" class="dropdown-content"
+                selected="{{slideshow.animation}}" attr-for-selected="animation">
+              <!--
+                Refer to full list of Animate.css animations:
+                https://daneden.github.io/animate.css/
+              -->
+              <paper-item animation="fadeIn">Fade</paper-item>
+              <paper-item animation="bounceIn">Bounce</paper-item>
+              <paper-item animation="rotateIn">Rotate</paper-item>
+              <paper-item animation="slideInUp">Slide Up</paper-item>
+              <paper-item animation="slideInDown">Slide Down</paper-item>
+              <paper-item animation="slideInLeft">Slide Left</paper-item>
+              <paper-item animation="slideInRight">Slide Right</paper-item>
+              <paper-item animation="rollIn">Roll</paper-item>
+              <paper-item animation="zoomIn">Zoom In</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </p>
+
+        <div class="buttons">
+          <paper-button dialog-dismiss>Close</paper-button>
+        </div>
+      </paper-dialog>
+      <paper-dialog id="imagePickerDialog" class="fill-screen"
+          with-backdrop="true">
+        <flickr-gallery id="flickrGallery"
+            api-key="6d5b3f474e29e01cbef7c20065f7afeb"></flickr-gallery>
+      </paper-dialog>
+      <paper-toast id="toast">
+        <paper-button onclick="app.$.toast.hide()">Ok</paper-button>
+      </paper-toast>
     </template>
-    <paper-dialog id="optionsDialog" with-backdrop="true">
-      <h2>Options</h2>
-      <p>
-        <paper-dropdown-menu label="Slideshow Speed">
-          <paper-listbox id="slideshowDelayListbox" class="dropdown-content"
-              selected="{{slideshow.delay}}" attr-for-selected="delay">
-            <paper-item delay="10000">Slow (0.5x)</paper-item>
-            <paper-item delay="5000">Normal</paper-item>
-            <paper-item delay="2500">Fast (2x)</paper-item>
-          </paper-listbox>
-        </paper-dropdown-menu>
-      </p>
-
-      <p>
-        <paper-dropdown-menu label="Slideshow Animation">
-          <paper-listbox id="slideshowAnimationListbox" class="dropdown-content"
-              selected="{{slideshow.animation}}" attr-for-selected="animation">
-            <!--
-              Refer to full list of Animate.css animations:
-              https://daneden.github.io/animate.css/
-            -->
-            <paper-item animation="fadeIn">Fade</paper-item>
-            <paper-item animation="bounceIn">Bounce</paper-item>
-            <paper-item animation="rotateIn">Rotate</paper-item>
-            <paper-item animation="slideInUp">Slide Up</paper-item>
-            <paper-item animation="slideInDown">Slide Down</paper-item>
-            <paper-item animation="slideInLeft">Slide Left</paper-item>
-            <paper-item animation="slideInRight">Slide Right</paper-item>
-            <paper-item animation="rollIn">Roll</paper-item>
-            <paper-item animation="zoomIn">Zoom In</paper-item>
-          </paper-listbox>
-        </paper-dropdown-menu>
-      </p>
-
-      <div class="buttons">
-        <paper-button dialog-dismiss>Close</paper-button>
-      </div>
-    </paper-dialog>
-    <paper-dialog id="imagePickerDialog" class="fill-screen"
-        with-backdrop="true">
-      <flickr-gallery id="flickrGallery"
-          api-key="6d5b3f474e29e01cbef7c20065f7afeb"></flickr-gallery>
-    </paper-dialog>
-    <paper-toast id="toast">
-      <paper-button onclick="app.$.toast.hide()">Ok</paper-button>
-    </paper-toast>
-  </template>
+  </dom-bind>
   <!-- build:js scripts/app.js -->
   <script src="scripts/constants.js"></script>
   <script src="scripts/app.js"></script>

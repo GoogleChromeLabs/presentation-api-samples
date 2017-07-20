@@ -25,7 +25,7 @@
    *
    * @type {Object}
    */
-  var slideshow = {
+  const slideshow = {
     images: [],
     delay: photowall.DEFAULT_SLIDESHOW_DELAY,
     animation: photowall.DEFAULT_SLIDESHOW_ANIMATION,
@@ -39,7 +39,7 @@
    *
    * @type {number}
    */
-  var imageSequence = 0;
+  let imageSequence = 0;
 
   /**
    * Gets image sequence number.
@@ -47,7 +47,7 @@
    * @function
    * @return {number} Increasing sequence number for giving IDs to images.
    */
-  var getImageId = function() {
+  const getImageId = function() {
     // Return and increment imageSequence.
     return imageSequence++;
   };
@@ -58,13 +58,14 @@
    * @function
    * @param {PresentationConnection} connection Presentation connection.
    */
-  var addConnection = function(connection) {
+  const addConnection = function(connection) {
     // Send the state of the slideshow through the connection.
+
     connection.onconnect = function() {
       sendMessage(connection, slideshow);
     };
     connection.onmessage = function(e) {
-      var jsonMessage = JSON.parse(e.data);
+      const jsonMessage = JSON.parse(e.data);
       switch (jsonMessage.action) {
         case photowall.SlideshowAction.ADD_IMAGE:
           addImage(jsonMessage.data);
@@ -90,7 +91,7 @@
    * @function
    * @param {Object} image Object representation of the image.
    */
-  var addImage = function(image) {
+  const addImage = function(image) {
     // Attach an ID to the image.
     image.id = getImageId();
     // Push image to slideshow.
@@ -112,10 +113,10 @@
    * @param {number} id Image ID.
    * @return {boolean} True if an image was removed.
    */
-  var removeImage = function(id) {
+  const removeImage = function(id) {
     return slideshow.images.some(function(image) {
       if (image.id == id) {
-        var imageIndex = slideshow.images.indexOf(image);
+        const imageIndex = slideshow.images.indexOf(image);
         slideshow.images.splice(imageIndex, 1);
         if (imageIndex < slideshow.currentImageIndex) {
           slideshow.currentImageIndex--;
@@ -135,7 +136,7 @@
    * @function
    * @param {number} delay Delay time in milliseconds.
    */
-  var changeDelay = function(delay) {
+  const changeDelay = function(delay) {
     slideshow.delay = delay;
     // Reset delay for current image.
     slideshow.currentImageIndex--;
@@ -148,7 +149,7 @@
    * @function
    * @param {string} animation Slideshow animation.
    */
-  var changeAnimation = function(animation) {
+  const changeAnimation = function(animation) {
     slideshow.animation = animation;
   };
 
@@ -159,7 +160,8 @@
    * @param {PresentationConnection} connection Presentation connection.
    * @param {(string|Object)} message Message to be sent.
    */
-  var sendMessage = function(connection, message) {
+  const sendMessage = function(connection, message) {
+
     if (typeof message == 'object') {
       message = JSON.stringify(message);
     }
@@ -172,7 +174,8 @@
    * @function
    * @param {(string|Object)} message Message to be sent.
    */
-  var broadcastMessage = function(message) {
+  const broadcastMessage = function(message) {
+
     navigator.presentation.receiver.connectionList.then(function(list) {
       list.connections.map(function(connection) {
         sendMessage(connection, message);
@@ -185,14 +188,14 @@
    *
    * @type {?number}
    */
-  var nextImageTimeout = null;
+  let nextImageTimeout = null;
 
   /**
    * Periodically cycles through images in the slideshow.
    *
    * @function
    */
-  var showNextImage = function() {
+  let showNextImage = function() {
     if (nextImageTimeout) {
       clearTimeout(nextImageTimeout);
     }
@@ -206,8 +209,8 @@
       document.querySelector('#slideshow').innerHTML = '';
     } else {
       // Replace slideshow with current image.
-      var currentImage = slideshow.images[slideshow.currentImageIndex];
-      var img = new Image();
+      const currentImage = slideshow.images[slideshow.currentImageIndex];
+      const img = new Image();
       img.src = currentImage.url;
       img.className = "animated " + slideshow.animation;
       // Remove old slideshow image after the new slideshow image has completed
@@ -234,14 +237,14 @@
    *
    * @function
    */
-  var preloadNextImage = function() {
-    var nextImageIndex = slideshow.currentImageIndex + 1;
+  const preloadNextImage = function() {
+    let nextImageIndex = slideshow.currentImageIndex + 1;
     if (nextImageIndex >= slideshow.images.length) {
       nextImageIndex = 0;
     }
     if (slideshow.images.length > 1) {
-      var nextImage = slideshow.images[nextImageIndex];
-      var img = new Image();
+      const nextImage = slideshow.images[nextImageIndex];
+      const img = new Image();
       img.src = nextImage.url;
     }
   };

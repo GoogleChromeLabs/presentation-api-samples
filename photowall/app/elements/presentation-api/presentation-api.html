@@ -77,16 +77,17 @@ Example:
        * @function
        */
       ready: function() {
-        var that = this;
+        const that = this;
         // Starts a new PresentationRequest to the specified presentation URL.
         this._set_presentationRequest(new PresentationRequest(this.url));
         // Monitors for the availability of presentation displays and updates
         // the displaysAvailable property when availability changes.
-        this._presentationRequest.getAvailability().then(function(availability) {
-          that._setDisplaysAvailable(availability.value);
-          availability.onchange = function() {
-            that._setDisplaysAvailable(this.value);
-          };
+        this._presentationRequest.getAvailability().then(
+          function(availability) {
+            that._setDisplaysAvailable(availability.value);
+            availability.onchange = function() {
+              that._setDisplaysAvailable(this.value);
+            };
         });
       },
 
@@ -96,39 +97,41 @@ Example:
        * @function
        */
       join: function() {
-        var that = this;
+        const that = this;
         if (this.isConnected) {
           // Already connected, abort remaining steps.
           return;
         }
-        this._presentationRequest.start().then(function(presentationConnection) {
-          // Promise for presentationConnection resolved.
-          // Updates the _presentationConnection property.
-          that._set_presentationConnection(presentationConnection);
-          // Update the state of the presentation connection and fire events.
-          if (presentationConnection.state == 'connected') {
-            that._setIsConnected(true);
-            that.fire('connect');
-          }
-          presentationConnection.onconnect = function() {
-            that._setIsConnected(true);
-            that.fire('connect');
-          };
-          // Called when the presentation connection is closed.
-          presentationConnection.onclose = function() {
-            that._setIsConnected(false);
-            that.fire('disconnect');
-          };
-          // Called when the presentation connection is terminated.
-          presentationConnection.onterminate = function() {
-            that._setIsConnected(false);
-            that.fire('disconnect');
-          };
-          // Called when a message is received through the channel.
-          presentationConnection.onmessage = function(e) {
-            // Fire an event with the contents of the message.
-            that.fire('message', e.data)
-          };
+        this._presentationRequest.start().then(
+          function(presentationConnection) {
+            // Promise for presentationConnection resolved.
+            // Updates the _presentationConnection property.
+            that._set_presentationConnection(presentationConnection);
+            // Update the state of the presentation connection and fire events.
+            if (presentationConnection.state == 'connected' ||
+                presentationConnection.state == 'connecting') {
+              that._setIsConnected(true);
+              that.fire('connect');
+            }
+            presentationConnection.onconnect = function() {
+              that._setIsConnected(true);
+              that.fire('connect');
+            };
+            // Called when the presentation connection is closed.
+            presentationConnection.onclose = function() {
+              that._setIsConnected(false);
+              that.fire('disconnect');
+            };
+            // Called when the presentation connection is terminated.
+            presentationConnection.onterminate = function() {
+              that._setIsConnected(false);
+              that.fire('disconnect');
+            };
+            // Called when a message is received through the channel.
+            presentationConnection.onmessage = function(e) {
+              // Fire an event with the contents of the message.
+              that.fire('message', e.data)
+            };
         });
       },
 

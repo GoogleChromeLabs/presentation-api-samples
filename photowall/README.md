@@ -39,11 +39,8 @@ Presentation API has been implemented in Google Cast for Education. Currently,
 only one connection at a time is supported. Support for multiple connections and
 other receivers will be coming in the future. Casting to other receivers will
 fall back to mirroring mode until they are supported. To try out the demo, add
-the [Google Cast for Education]
-(https://chrome.google.com/webstore/detail/google-cast-for-education/bnmgbcehmiinmmlmepibeeflglhbhlea)
+the [Google Cast for Education](https://chrome.google.com/webstore/detail/google-cast-for-education/bnmgbcehmiinmmlmepibeeflglhbhlea)
 app to Chrome and launch it. For more help on setting up Google Cast for
-Education, check out the [support page]
-(https://support.google.com/edu/castforedu).
+Education, check out the [support page](https://support.google.com/edu/castforedu).
 
-Presentation API is [enabled by default]
-(https://www.chromestatus.com/feature/6676265876586496) on Chrome 51+.
+Presentation API is [enabled by default](https://www.chromestatus.com/feature/6676265876586496) on Chrome 51+.
