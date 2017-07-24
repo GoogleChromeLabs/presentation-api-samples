@@ -1,8 +1,7 @@
 # Photowall: Presentation API Sample
 
 This web app allows multiple controllers to collaboratively present a photo
-slideshow on a presentation display via [Presentation API]
-(https://w3c.github.io/presentation-api/). Each controller can add or remove
+slideshow on a presentation display via [Presentation API](https://w3c.github.io/presentation-api/). Each controller can add or remove
 photos from Flickr to the slideshow. Image search is implemented using the
 Flickr API and photos are loaded by the presentation display directly from
 Flickr.
