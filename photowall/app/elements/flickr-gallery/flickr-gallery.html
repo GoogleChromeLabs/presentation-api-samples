@@ -1,0 +1,378 @@
+<!--
+  Copyright 2017 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+
+<!--
+
+`flickr-gallery` displays a gallery of images from Flickr in a grid layout
+based on a search query. It fetches Flickr search results via ajax and comes
+with support for pagination.
+
+Example:
+
+    <flickr-gallery
+        api-key="..."
+        query="golden gate bridge">
+    </flickr-gallery>
+
+-->
+
+<dom-module id="flickr-gallery">
+  <template>
+    <style>
+      :host {
+        display: block;
+        padding: 0;
+      }
+      .gallery {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        padding: 3px;
+      }
+      .galleryItem {
+        @apply(--layout-flex);
+        height: 250px;
+        margin: 3px;
+        min-width: 300px;
+        max-width: 500px;
+        padding: 0;
+        position: relative;
+      }
+      .galleryItem > iron-image {
+        background: #ddd;
+        cursor: pointer;
+        height: 100%;
+        opacity: 1;
+        transition: all .3s ease;
+        width: 100%;
+      }
+      .galleryItem > iron-image:hover {
+        opacity: 0.7;
+      }
+      .loadMoreButton {
+        margin: 40px;
+        text-align: center;
+      }
+      .loader {
+        margin: 45px;
+        text-align: center;
+      }
+      paper-toolbar paper-input {
+        width: 100%;
+        --paper-input-container-color: var(--light-primary-color);
+        --paper-input-container-input-color: #fff;
+      }
+      paper-material.notice {
+        margin: 20px;
+        padding: 20px;
+      }
+    </style>
+
+    <paper-toolbar>
+      <paper-input label="Search" no-label-float value="{{query}}" autofocus>
+      </paper-input>
+    </paper-toolbar>
+
+    <iron-ajax id="ajax"
+        loading="{{loading}}" handle-as="json"
+        url="[[_computeQueryUrl(apiKey, query, _itemsPerPage, _page)]]"
+        on-response="_onAjaxResponse"></iron-ajax>
+
+    <template is="dom-if" if="[[_noResults]]">
+      <paper-material class="notice">
+        <iron-icon icon="info"></iron-icon>
+        No photos found for "{{query}}"
+      </paper-material>
+    </template>
+
+    <template is="dom-if" if="[[!_trim(query)]]">
+      <paper-material class="notice">
+        <iron-icon icon="info"></iron-icon>
+        To get started, type something into the search bar above
+      </paper-material>
+    </template>
+
+    <div class="gallery">
+      <template is="dom-repeat" items="[[photos]]" as="photo">
+        <paper-button class="galleryItem" on-click="_selectPhoto">
+          <iron-image src="[[_computePhotoUrl(photo)]]" sizing="cover"
+              preload fade></iron-image>
+        </paper-button>
+      </template>
+    </div>
+
+    <template is="dom-if" if="[[_showNextPageBtn(_hasNextPage, loading)]]">
+      <div class="loadMoreButton">
+        <paper-button raised on-click="_initNewSearchMorePhotos">
+          Load More
+        </paper-button>
+      </div>
+    </template>
+
+    <template is="dom-if" if="[[loading]]">
+      <div class="loader">
+        <paper-spinner alt="Loading more photos" active></paper-spinner>
+      </div>
+    </template>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'flickr-gallery',
+
+      properties: {
+
+        // Flickr API Key.
+        apiKey: String,
+
+        // List of photos for search query.
+        photos: {
+          type: Array,
+          readOnly: true,
+          value: [],
+        },
+
+        // Flickr search query.
+        query: {
+          type: String,
+          value: '',
+        },
+
+        // Selected photo.
+        selectedItem: {
+          type: Object,
+          readOnly: true,
+          notify: true,
+        },
+
+        // Flag for when there are more photos to be loaded.
+        _hasNextPage: {
+          type: Boolean,
+          readOnly: true,
+          value: false,
+        },
+
+        // Number of photos to load each time.
+        _itemsPerPage: {
+          type: Number,
+          readOnly: true,
+          value: 100,
+        },
+
+        // Flag for when a search query returns zero result.
+        _noResults: {
+          type: Boolean,
+          readOnly: true,
+          value: false,
+        },
+
+        // Current page number for pagination.
+        _page: {
+          type: Number,
+          readOnly: true,
+          value: 1,
+        },
+
+      },
+
+      // Calls _initNewSearch() when any of the following properties change.
+      observers: [
+        '_initNewSearch(apiKey, query, _itemsPerPage)'
+      ],
+
+      /**
+       * Resets search parameters and starts a new search using the Flickr API.
+       *
+       * @function
+       * @private
+       */
+      _initNewSearch: function() {
+        // Initialize page number to 1 for pagination.
+        this._set_page(1);
+        // Initialize list of photos found to empty array.
+        this._setPhotos([]);
+        // Initialize _hasNextPage to false until we receive ajax response.
+        this._set_hasNextPage(false);
+        // Initialize _noResults to false until we receive ajax response.
+        this._set_noResults(false);
+        // Initiates a nex ajax request.
+        this._fetch();
+      },
+
+      /**
+       * Checks if there are more pages to load, increments the page number and
+       * initiates a new ajax request.
+       *
+       * @function
+       * @private
+       */
+      _initNewSearchMorePhotos: function() {
+        if (this._hasNextPage) {
+          this._set_page(this._page + 1);
+          this._fetch();
+        }
+      },
+
+      /**
+       * Initiates a new ajax request, aborting the last request if any.
+       * Search results are displayed as the query is typed, leading to
+       * multiple requests while the query is being typed. If there is a
+       * previous ajax request in progress, it will be aborted before the
+       * new one starts.
+       *
+       * @function
+       * @private
+       */
+      _fetch: function() {
+        if (this.$.ajax.lastRequest) {
+          this.$.ajax.lastRequest.abort();
+        }
+        if (this._trim(this.query).length) {
+          this.$.ajax.generateRequest();
+        }
+      },
+
+      /**
+       * Called when the ajax request completes.
+       * Refer to Flickr API for expected response:
+       * https://www.flickr.com/services/api/flickr.photos.search.html
+       *
+       * @function
+       * @private
+       * @param {Event} e Event for when a response is received.
+       */
+      _onAjaxResponse: function(e) {
+        // Check if the response is valid and add photos to the array of photos.
+        if (e.detail.response && e.detail.response.stat == 'ok') {
+          e.detail.response.photos.photo.forEach(function(photo) {
+            this.push('photos', photo);
+          }, this);
+          this._set_noResults(e.detail.response.photos.total === "0");
+          this._set_hasNextPage(this._page < e.detail.response.photos.pages);
+        } else if (e.detail.response && e.detail.response.stat == 'fail') {
+          throw new Error(e.detail.response.message);
+        }
+      },
+
+      /**
+       * Constructs the URL for the photo, 500px on longest side.
+       * https://www.flickr.com/services/api/misc.urls.html
+       *
+       * @function
+       * @private
+       * @param {Object} Flickr API's representation of a photo.
+       * @return {String} URL of image.
+       */
+      _computePhotoUrl: function(photo) {
+        if (photo) {
+          return 'https://farm' + photo.farm + '.staticflickr.com/' +
+              photo.server + '/' + photo.id + '_' + photo.secret + '.jpg';
+        }
+      },
+
+      /**
+       * Constructs the URL for the photo, 1024px on longest side.
+       * https://www.flickr.com/services/api/misc.urls.html
+       *
+       * @function
+       * @private
+       * @param {Object} photo Flickr API's representation of a photo.
+       * @return {String} URL of image.
+       */
+      _computeLargePhotoUrl: function(photo) {
+        if (photo) {
+          return 'https://farm' + photo.farm + '.staticflickr.com/' +
+              photo.server + '/' + photo.id + '_' + photo.secret + '_b.jpg';
+        }
+      },
+
+      /**
+       * Constructs the ajax endpoint for the Flickr API based on the query.
+       *
+       * @function
+       * @private
+       * @param {String} apiKey Flickr API key.
+       * @param {String} query Search query.
+       * @param {Number} _itemsPerPage Number of search results per page.
+       * @param {Number} _page Current page number.
+       * @return {String} URL for querying the Flickr API.
+       */
+      _computeQueryUrl: function(apiKey, query, _itemsPerPage, _page) {
+        return 'https://api.flickr.com/services/rest/' +
+            '?method=flickr.photos.search' +
+            '&api_key=' + apiKey +
+            '&format=json' +
+            '&nojsoncallback=1' +
+            '&safe_search=1&' +
+            'sort=interestingness-desc'+
+            '&text=' + encodeURIComponent(this._trim(query)) +
+            '&per_page=' + _itemsPerPage +
+            '&page=' + _page;
+      },
+
+      /**
+       * Returns true if _hasNextPage is true and loading is false.
+       *
+       * @function
+       * @private
+       * @param {Boolean} _hasNextPage Whether there are more photos to load
+       *     for the query.
+       * @param {Boolean} loading Whether there is an active ajax request.
+       * @return {Boolean} True if the next page button should be shown.
+       */
+      _showNextPageBtn: function(_hasNextPage, loading) {
+        return (_hasNextPage && !loading);
+      },
+
+      /**
+       * Called when an image in the library is clicked.
+       *
+       * @function
+       * @private
+       * @param {Event} e Event for when an image is clicked.
+       */
+      _selectPhoto: function(e) {
+        // Updates the selectedItem with an object containing the URL of the
+        // image thumbnail as well the url of a higher-resolution image.
+        var photo = e.model.photo;
+        this._setSelectedItem({
+          thumbnail: this._computePhotoUrl(photo),
+          url: this._computeLargePhotoUrl(photo)
+        });
+        // Fires the selectimage event.
+        this.fire('selectimage', this.selectedItem);
+      },
+
+      /**
+       * Helper function to trim a sting.
+       *
+       * @function
+       * @private
+       * @param {String} str String to be trimmed.
+       * @return {String} String that is trimmed.
+       */
+      _trim: function(str) {
+        return str.trim();
+      }
+    });
+  </script>
+</dom-module>

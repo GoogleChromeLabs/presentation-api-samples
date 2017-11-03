@@ -1,0 +1,181 @@
+<!--
+  Copyright 2017 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!--
+
+`presentation-api` is a Polymer element that allows a connection to be
+established with a presentation display via the Presentation API. Once
+connected, messages can be sent and received through the channel.
+
+This Polymer element does not have any UI components.
+
+Example:
+
+    <presentation-api
+      url="https://example.com/presentation.html"
+      displays-available="{{displaysAvailable}}"
+      is-connected="{{displayConnected}}">
+
+-->
+
+<dom-module id="presentation-api">
+  <script>
+    Polymer({
+      is: 'presentation-api',
+
+      properties: {
+
+        // Flag for availability of presentation displays.
+        displaysAvailable: {
+          type: Boolean,
+          value: false,
+          readOnly: true,
+          notify: true,
+        },
+
+        // Flag for whether we are connected to a display.
+        isConnected: {
+          type: Boolean,
+          value: false,
+          readOnly: true,
+          notify: true,
+        },
+
+        // Presentation URL.
+        url: {
+          type: String,
+        },
+
+        // PresentationConnection object.
+        _presentationConnection: {
+          type: Object,
+          readOnly: true,
+        },
+
+        // PresentationRequest object.
+        _presentationRequest: {
+          type: Object,
+          readOnly: true,
+        },
+
+      },
+
+      /**
+       * Called when the element's local DOM is ready.
+       *
+       * @function
+       */
+      ready: function() {
+        const that = this;
+        // Starts a new PresentationRequest to the specified presentation URL.
+        this._set_presentationRequest(new PresentationRequest(this.url));
+        // Monitors for the availability of presentation displays and updates
+        // the displaysAvailable property when availability changes.
+        this._presentationRequest.getAvailability().then(
+          function(availability) {
+            that._setDisplaysAvailable(availability.value);
+            availability.onchange = function() {
+              that._setDisplaysAvailable(this.value);
+            };
+        });
+      },
+
+      /**
+       * Shows a modal and attempts to establish a PresentationConnection.
+       *
+       * @function
+       */
+      join: function() {
+        const that = this;
+        if (this.isConnected) {
+          // Already connected, abort remaining steps.
+          return;
+        }
+        this._presentationRequest.start().then(
+          function(presentationConnection) {
+            // Promise for presentationConnection resolved.
+            // Updates the _presentationConnection property.
+            that._set_presentationConnection(presentationConnection);
+            // Update the state of the presentation connection and fire events.
+            if (presentationConnection.state == 'connected' ||
+                presentationConnection.state == 'connecting') {
+              that._setIsConnected(true);
+              that.fire('connect');
+            }
+            presentationConnection.onconnect = function() {
+              that._setIsConnected(true);
+              that.fire('connect');
+            };
+            // Called when the presentation connection is closed.
+            presentationConnection.onclose = function() {
+              that._setIsConnected(false);
+              that.fire('disconnect');
+            };
+            // Called when the presentation connection is terminated.
+            presentationConnection.onterminate = function() {
+              that._setIsConnected(false);
+              that.fire('disconnect');
+            };
+            // Called when a message is received through the channel.
+            presentationConnection.onmessage = function(e) {
+              // Fire an event with the contents of the message.
+              that.fire('message', e.data)
+            };
+        });
+      },
+
+      /**
+       * Closes the presentation connection.
+       *
+       * @function
+       */
+      close: function() {
+        if (this.isConnected) {
+          this._presentationConnection.close();
+        }
+      },
+
+      /**
+       * Terminates the presentation connection.
+       *
+       * @function
+       */
+      terminate: function() {
+        if (this.isConnected) {
+          this._presentationConnection.terminate();
+        }
+      },
+
+      /**
+       * Sends a message through the presentation connection channel.
+       *
+       * @function
+       * @param {(String|Object)} message String message or JSON object.
+       */
+      send: function(message) {
+        // Only send message if connected.
+        if (this.isConnected) {
+          // Converts message to a JSON string if it is an object.
+          if (typeof message == 'object') {
+            message = JSON.stringify(message);
+          }
+          // Sends the message through the presentation connection.
+          this._presentationConnection.send(message);
+        }
+      }
+
+    });
+  </script>
+</dom-module>
+
