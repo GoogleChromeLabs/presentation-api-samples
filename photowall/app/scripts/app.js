@@ -18,7 +18,7 @@
 (function(document) {
   'use strict';
 
-  const app = document.querySelector('#app');
+  var app = document.querySelector('#app');
 
   /**
    * Keeps track of the state of the slideshow.
@@ -73,7 +73,7 @@
    * @param {Event} e Event for when an image is clicked.
    */
   app.selectPhoto = function(e) {
-    const photo = e.model.item;
+    var photo = e.model.item;
     app.$.presentation.send({
       action: photowall.SlideshowAction.REMOVE_IMAGE,
       data: photo.id,
@@ -160,8 +160,8 @@
     // Add event listener for when the selected item is changed in the
     // slideshow delay listbox.
     app.$.slideshowDelayListbox.addEventListener('iron-activate', function(e) {
-      const prevDelay = app.slideshow.delay;
-      const newDelay = parseInt(e.detail.selected);
+      var prevDelay = app.slideshow.delay;
+      var newDelay = parseInt(e.detail.selected);
       // Update presentation display only if there is a change in delay.
       if (prevDelay != newDelay) {
         app.$.presentation.send({
@@ -175,8 +175,8 @@
     // slideshow animation listbox.
     app.$.slideshowAnimationListbox
         .addEventListener('iron-activate', function(e) {
-      const prevAnimation = app.slideshow.animation;
-      const newAnimation = e.detail.selected;
+      var prevAnimation = app.slideshow.animation;
+      var newAnimation = e.detail.selected;
       // Update presentation display only if there is a change in animation.
       if (prevAnimation != newAnimation) {
         app.$.presentation.send({

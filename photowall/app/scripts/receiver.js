@@ -1,16 +1,15 @@
-/*
-  Copyright 2017 Google Inc. All Rights Reserved.
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-      http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
- /**
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  * @fileoverview Main script for receiver app to set up an image slideshow
  * launched via the Presentation API.
  * @author jonlau@google.com (Jonathan Lau)
@@ -25,7 +24,7 @@
    *
    * @type {Object}
    */
-  const slideshow = {
+  var slideshow = {
     images: [],
     delay: photowall.DEFAULT_SLIDESHOW_DELAY,
     animation: photowall.DEFAULT_SLIDESHOW_ANIMATION,
@@ -39,7 +38,7 @@
    *
    * @type {number}
    */
-  let imageSequence = 0;
+  var imageSequence = 0;
 
   /**
    * Gets image sequence number.
@@ -47,7 +46,7 @@
    * @function
    * @return {number} Increasing sequence number for giving IDs to images.
    */
-  const getImageId = function() {
+  var getImageId = function() {
     // Return and increment imageSequence.
     return imageSequence++;
   };
@@ -58,14 +57,14 @@
    * @function
    * @param {PresentationConnection} connection Presentation connection.
    */
-  const addConnection = function(connection) {
+  var addConnection = function(connection) {
     // Send the state of the slideshow through the connection.
 
-    connection.onconnect = function() {
+    connection.onconnect = function(e) {
       sendMessage(connection, slideshow);
     };
     connection.onmessage = function(e) {
-      const jsonMessage = JSON.parse(e.data);
+      var jsonMessage = JSON.parse(e.data);
       switch (jsonMessage.action) {
         case photowall.SlideshowAction.ADD_IMAGE:
           addImage(jsonMessage.data);
@@ -91,7 +90,7 @@
    * @function
    * @param {Object} image Object representation of the image.
    */
-  const addImage = function(image) {
+  var addImage = function(image) {
     // Attach an ID to the image.
     image.id = getImageId();
     // Push image to slideshow.
@@ -113,10 +112,10 @@
    * @param {number} id Image ID.
    * @return {boolean} True if an image was removed.
    */
-  const removeImage = function(id) {
+  var removeImage = function(id) {
     return slideshow.images.some(function(image) {
       if (image.id == id) {
-        const imageIndex = slideshow.images.indexOf(image);
+        var imageIndex = slideshow.images.indexOf(image);
         slideshow.images.splice(imageIndex, 1);
         if (imageIndex < slideshow.currentImageIndex) {
           slideshow.currentImageIndex--;
@@ -136,7 +135,7 @@
    * @function
    * @param {number} delay Delay time in milliseconds.
    */
-  const changeDelay = function(delay) {
+  var changeDelay = function(delay) {
     slideshow.delay = delay;
     // Reset delay for current image.
     slideshow.currentImageIndex--;
@@ -149,7 +148,7 @@
    * @function
    * @param {string} animation Slideshow animation.
    */
-  const changeAnimation = function(animation) {
+  var changeAnimation = function(animation) {
     slideshow.animation = animation;
   };
 
@@ -160,7 +159,7 @@
    * @param {PresentationConnection} connection Presentation connection.
    * @param {(string|Object)} message Message to be sent.
    */
-  const sendMessage = function(connection, message) {
+  var sendMessage = function(connection, message) {
 
     if (typeof message == 'object') {
       message = JSON.stringify(message);
@@ -174,7 +173,7 @@
    * @function
    * @param {(string|Object)} message Message to be sent.
    */
-  const broadcastMessage = function(message) {
+  var broadcastMessage = function(message) {
 
     navigator.presentation.receiver.connectionList.then(function(list) {
       list.connections.map(function(connection) {
@@ -188,14 +187,14 @@
    *
    * @type {?number}
    */
-  let nextImageTimeout = null;
+  var nextImageTimeout = null;
 
   /**
    * Periodically cycles through images in the slideshow.
    *
    * @function
    */
-  let showNextImage = function() {
+  var showNextImage = function() {
     if (nextImageTimeout) {
       clearTimeout(nextImageTimeout);
     }
@@ -209,8 +208,8 @@
       document.querySelector('#slideshow').innerHTML = '';
     } else {
       // Replace slideshow with current image.
-      const currentImage = slideshow.images[slideshow.currentImageIndex];
-      const img = new Image();
+      var currentImage = slideshow.images[slideshow.currentImageIndex];
+      var img = new Image();
       img.src = currentImage.url;
       img.className = "animated " + slideshow.animation;
       // Remove old slideshow image after the new slideshow image has completed
@@ -237,14 +236,14 @@
    *
    * @function
    */
-  const preloadNextImage = function() {
-    let nextImageIndex = slideshow.currentImageIndex + 1;
+  var preloadNextImage = function() {
+    var nextImageIndex = slideshow.currentImageIndex + 1;
     if (nextImageIndex >= slideshow.images.length) {
       nextImageIndex = 0;
     }
     if (slideshow.images.length > 1) {
-      const nextImage = slideshow.images[nextImageIndex];
-      const img = new Image();
+      var nextImage = slideshow.images[nextImageIndex];
+      var img = new Image();
       img.src = nextImage.url;
     }
   };

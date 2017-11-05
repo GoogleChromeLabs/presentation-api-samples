@@ -43,7 +43,9 @@ var optimizeHtmlTask = function(src, dest) {
   return gulp.src(src)
       .pipe(assets)
       // Concatenate and minify JavaScript
-      .pipe($.if ('*.js', $.uglify()))
+      .pipe($.if ('*.js', $.uglify().on('error', function(e) {
+            console.log(e);
+      })))
       // Concatenate and minify styles
       .pipe($.if ('*.css', $.minifyCss()))
       .pipe(assets.restore())

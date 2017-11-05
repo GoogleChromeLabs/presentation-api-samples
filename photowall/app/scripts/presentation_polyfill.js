@@ -9,7 +9,7 @@
  * should effectively be skipped.
  */
 if (!navigator.presentation.receiver) {
-  (() => {
+  (function() {
 
     'use strict';
 
@@ -20,7 +20,7 @@ if (!navigator.presentation.receiver) {
      *
      * @constructor
      */
-    const PresentationConnection = function() {
+    var PresentationConnection = function() {
 
       /**
        * Specifies the presentation connection's presentation identifier.
@@ -125,21 +125,21 @@ if (!navigator.presentation.receiver) {
      *
      * @constructor
      */
-    const PresentationReceiver = function() {
+    var PresentationReceiver = function() {
 
       /**
        * The non-terminated set of presentation connections.
        *
        * @type {!Promise<PresentationConnectionList>}
        */
-      this.connectionList = new Promise((resolve, reject) => {
-        const connectionList = new PresentationConnectionList();
-        let connectionListResolved = false;
-        window.addEventListener('message', e => {
-          const message = e.data;
+      this.connectionList = new Promise(function(resolve, reject) {
+        var connectionList = new PresentationConnectionList();
+        var connectionListResolved = false;
+        window.addEventListener('message', function(e) {
+          var message = e.data;
           switch (message.type) {
             case 'NEW_CONNECTION':
-              const presentationConnection = new PresentationConnection();
+              var presentationConnection = new PresentationConnection();
               // TODO(jonlau): Set the id of the presentation connection.
               presentationConnection.id = '';
               // Set message origin and source for message channel.
@@ -157,7 +157,7 @@ if (!navigator.presentation.receiver) {
               }
               break;
             case 'APP_MESSAGE':
-              connectionList.connections.forEach(connection => {
+              connectionList.connections.forEach(function(connection) {
                 if (connection.onmessage) {
                   connection.onmessage(
                       new MessageEvent('message', {data: message.data})
@@ -176,7 +176,7 @@ if (!navigator.presentation.receiver) {
      *
      * @constructor
      */
-    const PresentationConnectionList = function() {
+    var PresentationConnectionList = function() {
 
       /**
        * The non-terminated set of presentation connections.
