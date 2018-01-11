@@ -31,7 +31,7 @@ will be generated in the `dist` directory.
 
 ## Live Demo
 
-https://googlechrome.github.io/presentation-api-samples/photowall/
+https://googlechromelabs.github.io/presentation-api-samples/photowall/
 
 ## Presentation API Support
 
